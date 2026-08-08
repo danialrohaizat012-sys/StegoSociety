@@ -1,0 +1,25 @@
+{
+  "name": "Stego Society POS",
+  "short_name": "Stego POS",
+  "description": "Stego Society point-of-sale and operations system",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0D0D12",
+  "theme_color": "#0D0D12",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./stego-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./stego-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

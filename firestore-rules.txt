@@ -1,9 +1,138 @@
+ChatGPT Plus
+
+
+
+
+
+ChatGPT Image Aug 2, 2026, 01_35_44 PM.png
+
+
+pos.html
+File
+
+WhatsApp Image 2026-08-08 at 5.04.41 PM.jpeg
+
+Image 08-08-2026 at 5.17 PM.jpeg
+logo yang ni betulkan, kalau tak boleh betulkan tak perlu letak
+
+Image 08-08-2026 at 6.14 PM.jpeg
+sekarang ni saya tengah buat untuk owner
+
+Untuk staff, proses sama — cuma setiap staff mesti ada akaun sendiri dalam Firebase Authentication dahulu.
+
+Buat macam ni:
+
+Pergi Authentication → Users → Add user.
+
+Masukkan email staff + password untuk staff.
+
+Selepas create, copy UID staff tersebut.
+
+Pergi Firestore → users → Add document.
+
+Document ID = UID staff.
+
+Masukkan tiga field:
+
+Field	Type	Value
+name	string	Nama staff, contoh Amir
+role	string	staff
+email	string	Email staff tadi
+Contohnya:
+
+name  → string → Amir
+role  → string → staff
+email → string → amir@gmail.com
+Paling penting: untuk owner role = owner, untuk pekerja role = staff.
+
+Dengan cara ini setiap orang login guna email/password sendiri, dan POS boleh tahu siapa yang sedang menggunakan sistem. Nanti rekod transaksi/audit pun lebih mudah dikaitkan dengan staff yang betul.
+
+
+settle
+
+Cun. ✅
+
+Jadi sekarang Owner + Staff Authentication dan users Firestore dah settle.
+
+Next terus test build Stego Society POS Firebase V1:
+
+Owner login → pastikan masuk sebagai Owner
+
+Staff login → pastikan masuk sebagai Staff
+
+Cuba satu transaksi/test stock
+
+Refresh page → pastikan data masih kekal
+
+Semak Firestore → pastikan data masuk dalam project stego-society
+
+Kalau semua lepas, barulah kita boleh anggap Stego Society POS Firebase dah live.
+
+
+ejas firestore rules baru
+
+Boleh. Memandangkan sekarang kita dah ada Owner + Staff, saya cadangkan rules yang bezakan permission ikut role.
+
+Pergi Firebase → Firestore Database → Rules, padam rules lama dan paste ini:
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
+
+    // Helper: mesti login
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: ambil profile user berdasarkan Firebase Auth UID
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Owner
+    function isOwner() {
+      return isSignedIn() &&
+             userProfile().data.role == "owner";
+    }
+
+    // Staff
+    function isStaff() {
+      return isSignedIn() &&
+             userProfile().data.role == "staff";
+    }
+
+    // ==============================
+    // USER PROFILES
+    // ==============================
+    match /users/{userId} {
+      // User boleh baca profile sendiri.
+      // Owner boleh baca semua profile.
+      allow read: if isSignedIn() &&
+                  (request.auth.uid == userId || isOwner());
+
+      // Hanya owner boleh create/edit/delete profile melalui app.
+      allow create, update, delete: if isOwner();
+    }
+
+    // ==============================
+    // POS BUSINESS DATA
+    // ==============================
+    // Owner dan staff yang sah boleh menggunakan data operasi POS.
     match /{document=**} {
-      allow read, write: if signedIn();
+      allow read, create, update: if isOwner() || isStaff();
+
+      // Delete lebih sensitif: Owner sahaja.
+      allow delete: if isOwner();
     }
   }
 }
+Kemudian tekan Publish.
+
+Dengan rules ini, orang yang tak login tak boleh baca/tulis database, akaun yang tiada profile users/{UID} tak mendapat akses, owner boleh akses penuh, manakala staff boleh menjalankan operasi POS tetapi tak boleh delete document.
+
+Satu benda penting: sebab POS kita mempunyai beberapa operasi seperti sale, stock, purchase, trade-in dan sebagainya, rules ini masih agak general untuk fasa awal. Selepas kita confirm nama collection sebenar yang digunakan Stego POS, saya cadangkan kita ketatkan lagi rules per collection — contohnya staff boleh buat sales tetapi tak boleh mengubah role, settings sensitif atau historical records tertentu.
+
+Lepas Publish, test login Owner dahulu. Kalau dashboard berjaya load tanpa Missing or insufficient permissions, kemudian test akaun Staff.
+
+

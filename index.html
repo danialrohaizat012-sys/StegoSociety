@@ -11,7 +11,7 @@
   <link rel="manifest" href="./manifest-pos.json" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <title>Stego Society POS · Where Gaming Comes Alive</title>
-  <meta name="stego-build" content="STEGO-POS-BRAND-V1-20260808" />
+  <meta name="stego-build" content="STEGO-POS-FIREBASE-V1-20260808" />
   <style>
     :root{
       --bg:#f6f7f9;--surface:#fff;--surface2:#fbfcfd;--text:#111827;--muted:#667085;
@@ -1147,10 +1147,10 @@
         <section id="page-settings" class="page hidden">
           <div class="grid overview-grid">
             <div class="card section">
-              <div class="section-head"><div><h3>System Settings</h3><p>Local Storage Mode · data disimpan pada device/browser ini sahaja.</p></div></div>
+              <div class="section-head"><div><h3>System Settings</h3><p>Dedicated Firebase · Stego Society cloud database.</p></div></div>
               <div class="summary-mini"><span>Application</span><strong>Stego Society POS · Neon Gold Edition</strong></div>
-              <div class="summary-mini"><span>Database</span><strong>Local Storage (Offline)</strong></div>
-              <div class="backend-warning"><strong>✓ Local Storage Safe Mode</strong><span>Build ini tidak mempunyai sambungan Firebase. Semua data Stego Society disimpan hanya dalam browser/device ini dan tidak akan menyentuh database Meney.</span></div>
+              <div class="summary-mini"><span>Database</span><strong>Cloud Firestore · stego-society</strong></div>
+              <div class="backend-warning"><strong>✓ Dedicated Stego Firebase</strong><span>Build ini hanya menggunakan Firebase project <b>stego-society</b>. Ia tidak mempunyai sambungan kepada database Meney.</span></div>
               <div class="summary-mini"><span>Data ownership</span><strong>Export anytime</strong></div>
             </div>
 
@@ -1353,98 +1353,24 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script type="module">
-  // ===== Stego Society POS · Local Storage Backend =====
-  // This build intentionally has NO Firebase connection.
-  const LOCAL_DB_KEY="stego_society_pos_local_v1";
-  const LOCAL_AUTH_KEY="stego_society_pos_auth_v1";
-  const LOCAL_OWNER={uid:"local-owner",email:"owner@stego.local",password:"stego1234",name:"Stego Owner",role:"owner"};
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, addDoc, updateDoc, deleteDoc,
+    onSnapshot, query, orderBy, serverTimestamp, runTransaction, getDocs, writeBatch, setDoc
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-  function localLoad(){
-    try{return JSON.parse(localStorage.getItem(LOCAL_DB_KEY)||"{}")||{}}catch{return {}}
-  }
-  function localSave(data){localStorage.setItem(LOCAL_DB_KEY,JSON.stringify(data))}
-  function ensureLocalSeed(){
-    const data=localLoad();
-    data.users=data.users||{};
-    if(!data.users[LOCAL_OWNER.uid]) data.users[LOCAL_OWNER.uid]={name:LOCAL_OWNER.name,role:LOCAL_OWNER.role,email:LOCAL_OWNER.email};
-    localSave(data);
-  }
-  ensureLocalSeed();
-  const listeners=new Map();
-  function randomId(){return (crypto.randomUUID?crypto.randomUUID():`id-${Date.now()}-${Math.random().toString(16).slice(2)}`)}
-  function clone(v){return v==null?v:JSON.parse(JSON.stringify(v))}
-  function serverTimestamp(){return new Date().toISOString()}
-  function collection(_db,name){return {kind:"collection",name}}
-  function doc(a,b,c){
-    if(a&&a.kind==="collection") return {kind:"doc",collection:a.name,id:b||randomId()};
-    return {kind:"doc",collection:b,id:c||randomId()};
-  }
-  function snapFor(ref,data){return {id:ref.id,ref,exists:()=>data!==undefined,data:()=>clone(data)}}
-  async function getDoc(ref){const d=localLoad();return snapFor(ref,d?.[ref.collection]?.[ref.id])}
-  async function setDoc(ref,value,opts={}){
-    const d=localLoad();d[ref.collection]=d[ref.collection]||{};
-    d[ref.collection][ref.id]=opts.merge?{...(d[ref.collection][ref.id]||{}),...clone(value)}:clone(value);
-    localSave(d);notify(ref.collection);return ref;
-  }
-  async function updateDoc(ref,value){return setDoc(ref,value,{merge:true})}
-  async function deleteDoc(ref){const d=localLoad();if(d[ref.collection])delete d[ref.collection][ref.id];localSave(d);notify(ref.collection)}
-  async function addDoc(col,value){const ref=doc(col);await setDoc(ref,value);return ref}
-  function orderBy(field,dir="asc"){return {type:"orderBy",field,dir}}
-  function query(col,...clauses){return {kind:"query",collection:col.name,clauses}}
-  function valueForSort(v){if(v==null)return "";if(typeof v==="object"&&v.seconds)return Number(v.seconds)*1000;const t=Date.parse(v);return Number.isNaN(t)?v:t}
-  function docsFor(source){
-    const name=source.kind==="query"?source.collection:source.name;
-    const db=localLoad(),obj=db[name]||{};
-    let arr=Object.entries(obj).map(([id,data])=>snapFor({kind:"doc",collection:name,id},data));
-    const clause=source.kind==="query"?source.clauses.find(x=>x?.type==="orderBy"):null;
-    if(clause) arr.sort((a,b)=>{const av=valueForSort(a.data()?.[clause.field]),bv=valueForSort(b.data()?.[clause.field]);const r=av<bv?-1:av>bv?1:0;return clause.dir==="desc"?-r:r});
-    return arr;
-  }
-  async function getDocs(source){return {docs:docsFor(source),size:docsFor(source).length,empty:docsFor(source).length===0}}
-  function emit(source,cb){const docs=docsFor(source);cb({docs,size:docs.length,empty:docs.length===0})}
-  function onSnapshot(source,cb,_err){
-    const name=source.kind==="query"?source.collection:source.name;
-    const item={source,cb};if(!listeners.has(name))listeners.set(name,new Set());listeners.get(name).add(item);
-    queueMicrotask(()=>emit(source,cb));
-    return ()=>listeners.get(name)?.delete(item)
-  }
-  function notify(name){listeners.get(name)?.forEach(x=>queueMicrotask(()=>emit(x.source,x.cb)))}
-  async function runTransaction(_db,fn){
-    const staged=[];
-    const tx={
-      get:getDoc,
-      set:(ref,val,opts)=>staged.push(["set",ref,val,opts]),
-      update:(ref,val)=>staged.push(["update",ref,val]),
-      delete:(ref)=>staged.push(["delete",ref])
-    };
-    const result=await fn(tx);
-    const data=localLoad(),changed=new Set();
-    for(const [op,ref,val,opts] of staged){
-      data[ref.collection]=data[ref.collection]||{};changed.add(ref.collection);
-      if(op==="delete") delete data[ref.collection][ref.id];
-      else if(op==="update"||(op==="set"&&opts?.merge)) data[ref.collection][ref.id]={...(data[ref.collection][ref.id]||{}),...clone(val)};
-      else data[ref.collection][ref.id]=clone(val);
-    }
-    localSave(data);changed.forEach(notify);return result;
-  }
-  function writeBatch(_db){
-    const staged=[];return {
-      set:(r,v,o)=>staged.push(["set",r,v,o]),update:(r,v)=>staged.push(["update",r,v]),delete:r=>staged.push(["delete",r]),
-      commit:async()=>{const d=localLoad(),changed=new Set();for(const [op,r,v,o] of staged){d[r.collection]=d[r.collection]||{};changed.add(r.collection);if(op==="delete")delete d[r.collection][r.id];else if(op==="update"||(op==="set"&&o?.merge))d[r.collection][r.id]={...(d[r.collection][r.id]||{}),...clone(v)};else d[r.collection][r.id]=clone(v)}localSave(d);changed.forEach(notify)}
-    }
-  }
-  const db={mode:"localStorage"};
+  // ===== Stego Society POS · Dedicated Firebase Backend =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvLF5oOkVjWHN-b3P9D9FR1pHQONx3HD4",
+    authDomain: "stego-society.firebaseapp.com",
+    projectId: "stego-society",
+    storageBucket: "stego-society.firebasestorage.app",
+    messagingSenderId: "252289843736",
+    appId: "1:252289843736:web:f9ab1b58143363a415b96d"
+  };
 
-  const auth={currentUser:null,listeners:new Set()};
-  function authEmit(){auth.listeners.forEach(cb=>cb(auth.currentUser))}
-  async function signInWithEmailAndPassword(_auth,email,password){
-    if(String(email).trim().toLowerCase()!==LOCAL_OWNER.email||password!==LOCAL_OWNER.password)throw Object.assign(new Error("Email atau password salah."),{code:"auth/invalid-credential"});
-    auth.currentUser={uid:LOCAL_OWNER.uid,email:LOCAL_OWNER.email};localStorage.setItem(LOCAL_AUTH_KEY,JSON.stringify(auth.currentUser));authEmit();return {user:auth.currentUser};
-  }
-  function onAuthStateChanged(_auth,cb){auth.listeners.add(cb);queueMicrotask(()=>{try{auth.currentUser=JSON.parse(localStorage.getItem(LOCAL_AUTH_KEY)||"null")}catch{auth.currentUser=null}cb(auth.currentUser)});return()=>auth.listeners.delete(cb)}
-  async function signOut(){auth.currentUser=null;localStorage.removeItem(LOCAL_AUTH_KEY);authEmit()}
-  const EmailAuthProvider={credential:(email,password)=>({email,password})};
-  async function reauthenticateWithCredential(user,credential){if(user?.email!==LOCAL_OWNER.email||credential?.password!==LOCAL_OWNER.password)throw new Error("Password owner tidak sah.");return {user}}
+  const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
   const $=id=>document.getElementById(id);
   function hidePosSplash(){
     if(typeof window.__hideMeneySplash==="function")window.__hideMeneySplash();
@@ -2852,7 +2778,7 @@ th,td{text-align:left;border-bottom:1px solid #e5e7eb;padding:9px 7px;font-size:
     }
   }
   async function fullBackup(format){
-    const stamp=safeDate(),payload={meta:{application:"Stego Society POS",version:"2.9.1",exportedAt:new Date().toISOString(),storageMode:"localStorage"},collections:{}};
+    const stamp=safeDate(),payload={meta:{application:"Stego Society POS",version:"2.9.1",exportedAt:new Date().toISOString(),storageMode:"cloudFirestore",firebaseProject:"stego-society"},collections:{}};
     Object.keys(exportCollections).forEach(k=>payload.collections[k]=jsonReady(state[k]||[]));
     if(format==="json")return downloadBlob(JSON.stringify(payload,null,2),`Stego_Society_POS_Full_Backup_${stamp}.json`,"application/json");
     if(format==="xlsx"){

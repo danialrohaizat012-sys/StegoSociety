@@ -1,19 +1,33 @@
 STEGO SOCIETY POS — FIREBASE SETUP
 
-1. Firebase Console > Authentication > Sign-in method > enable Email/Password.
-2. Authentication > Users > Add user using the Stego Society Gmail/email and your chosen password.
-3. Copy the new user's UID.
-4. Firestore Database > Create database.
-5. Create collection: users
-6. Create document with Document ID = the Authentication UID.
-7. Add fields:
-   name (string): Stego Owner
-   role (string): owner
-   email (string): your Stego Society login email
-8. Firestore > Rules > paste firestore-rules.txt and Publish.
-9. Deploy all files in this folder to GitHub Pages.
+Firebase project:
+stego-society
 
-IMPORTANT
-- Firebase project used by this build: stego-society
-- No Meney Firebase config is present in this build.
-- The public Firebase API key in a web app is normal; access is controlled by Authentication + Firestore Rules.
+1. Authentication
+   - Enable Email/Password.
+   - Create Owner and Staff accounts.
+
+2. Firestore users collection
+   Document ID = Firebase Authentication UID.
+
+   Owner example:
+   name  (string) = Azeel
+   role  (string) = owner
+   email (string) = owner email
+
+   Staff example:
+   name  (string) = Staff Name
+   role  (string) = staff
+   email (string) = staff email
+
+3. Firestore Rules
+   - Open Firestore Database > Rules.
+   - Replace current rules with the content of firestore-rules.txt.
+   - Publish.
+
+4. GitHub Pages
+   - Upload ALL files from this folder to the repository root.
+   - index.html is the main entry file.
+
+This build uses ONLY Firebase project: stego-society
+It does not use Meney Firebase.

@@ -530,14 +530,25 @@
 
     .local-login-hint{margin-top:14px;padding:12px 14px;border:1px solid rgba(212,175,55,.28);background:rgba(212,175,55,.07);border-radius:12px;font-size:11px;line-height:1.6}.local-login-hint strong,.local-login-hint span{display:block}.local-login-hint strong{color:var(--gold,#D4AF37);margin-bottom:3px}.backend-warning{margin-top:12px;padding:13px 14px;border:1px solid rgba(212,175,55,.26);background:rgba(212,175,55,.06);border-radius:13px}.backend-warning strong,.backend-warning span{display:block}.backend-warning span{margin-top:5px;font-size:11px;line-height:1.55;color:var(--muted)}
 
-/* Stego Comfort UI: readable, calm, brand-consistent */
-:root{--bg:#f2f3f5;--surface:#ffffff;--surface2:#f8f9fb;--text:#1b2430;--muted:#475467;--line:#d8dde5;--line2:#e6e9ef;--green:#806017;--green2:#684c0e;--green-soft:#f8f0d9;--purple:#654e93;--purple-soft:#f1edf8;--blue:#245b94;--blue-soft:#eaf1fa;--orange:#a96314;--orange-soft:#fff3e2;--red:#b42318;--red-soft:#fff0ed;--shadow:0 8px 24px rgba(17,24,39,.055)}
-body{color:var(--text);background:var(--bg)}
-input,select,textarea{color:var(--text)}
+/* Stego Comfort UI V2: neutral-first, gold only for primary actions */
+:root{--bg:#f4f5f7;--surface:#fff;--surface2:#f8f9fb;--text:#202936;--muted:#526071;--line:#dce1e8;--line2:#e9edf2;--green:#73551b;--green2:#59400f;--green-soft:#f7f0dd;--purple:#584a80;--purple-soft:#f1eff8;--blue:#285b8b;--blue-soft:#eaf1f9;--orange:#a15c12;--orange-soft:#fff3e4;--red:#b42318;--red-soft:#fff0ed;--shadow:0 5px 18px rgba(20,30,45,.045)}
+html,body{background:var(--bg);color:var(--text)}
+.sidebar,.topbar,.card,.quick,.txn-card,.step{background:#fff}
+.nav-btn{color:#344054}.nav-btn:hover{background:#f0f2f5;color:#202936}
+.nav-btn.active{background:#f6eed9;color:#62470f;box-shadow:inset 3px 0 0 #a47a2a}
+.role-pill{background:#f4ebd3;color:#62470f;border:1px solid #e4d3a7}
+.btn-green{background:#73551b;color:#fff}.btn-green:hover{background:#59400f}
+.btn-light{background:#f6f7f9;color:#344054;border:1px solid #dce1e8}
+.stat-card .trend{color:#326b4b}
+.step.active{background:#fcf8ed;border-color:#c9ac6c}.step.active .step-no{background:#73551b;color:#fff}
+.txn-card:hover{border-color:#c9ac6c}
+th,.nav-label{color:#596577}
+input,select,textarea{color:#202936;background:#fff;border-color:#bfc8d4}
 input::placeholder,textarea::placeholder{color:#667085;opacity:1}
-button,a,input,select,textarea{accent-color:#806017}
-:focus-visible{outline:3px solid #c39a41!important;outline-offset:2px}
-/* Preserve semantic success/error status colors; soften only primary brand accents. */
+input:focus,select:focus,textarea:focus{border-color:#a47a2a;box-shadow:0 0 0 3px rgba(164,122,42,.13)}
+button,a,input,select,textarea{accent-color:#73551b}
+:focus-visible{outline:3px solid #b58b3d!important;outline-offset:2px}
+/* Semantic badges keep their distinct success, warning and error meanings. */
 </style>
 </head>
 <body>

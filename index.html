@@ -552,6 +552,31 @@ button,a,input,select,textarea{accent-color:#202020}
 :focus-visible{outline:3px solid #525252!important;outline-offset:2px}
 .badge.green,.badge.purple,.badge.blue,.badge.orange,.badge.red,.badge.gray,.green,.purple,.blue,.orange,.red,.gray{background:#ededed;color:#292929}
 /* Visual-only monochrome: transaction and Firebase logic unchanged. */
+
+/* V3.1 critical contrast repair: override legacy Neon Gold !important declarations */
+html,body,.app-shell,.main,.page-wrap{background:#f3f4f6!important;color:#171717!important}
+.sidebar,.topbar{background:#fff!important;border-color:#dedede!important;color:#171717!important}
+.brand h1,.topbar h2,.topbar p,.brand p{color:#171717!important}
+.brand p,.topbar p{color:#525252!important}
+.role-pill{background:#202020!important;color:#fff!important;border-color:#202020!important}
+.nav-btn{color:#333!important}.nav-btn:hover{background:#eee!important;color:#111!important}
+.nav-btn.active{background:#202020!important;color:#fff!important;box-shadow:none!important}
+.card,.section,.flow-col,.buy-item-card,.sp-item-card,.consignment-item-card,.stat-card,.quick,.step,.txn-card{background:#fff!important;color:#171717!important;border-color:#d4d4d4!important;box-shadow:0 4px 16px rgba(0,0,0,.04)!important}
+.stat-card .value,.summary-mini strong,.section-head h3,.quick strong,.txn-card strong{color:#171717!important}
+.stat-card .label,.muted,.section-head p,.field-help,.quick span,.step span{color:#525252!important}
+.summary-mini,.split-payment-box,.variance-box,.customer-selector,.entry-mode-option,.document-note,.sp-create-box,.notice,.product-row,.cart-line{background:#f7f7f7!important;color:#222!important;border-color:#ddd!important}
+input,select,textarea{background:#fff!important;color:#171717!important;border:1px solid #aaa!important}
+input::placeholder,textarea::placeholder{color:#666!important;opacity:1}
+select option{background:#fff!important;color:#171717!important}
+.btn-green,.btn-purple,.btn-blue,.btn-dark{background:#202020!important;color:#fff!important;border-color:#202020!important;box-shadow:none!important}
+.btn-light,.btn-danger{background:#f1f1f1!important;color:#222!important;border:1px solid #ccc!important}
+.btn:hover{filter:brightness(.92)}
+table{color:#171717!important}th{background:#f0f0f0!important;color:#333!important;border-color:#ddd!important}td{color:#222!important;border-color:#e3e3e3!important}tbody tr:hover{background:#f7f7f7!important}
+.badge,.green,.purple,.blue,.orange,.red,.gray{background:#e9e9e9!important;color:#222!important}
+.step.active{background:#eaeaea!important;border-color:#555!important}.step.active .step-no{background:#222!important;color:#fff!important}
+.quick .qicon{background:#ededed!important;color:#222!important;border-color:#ddd!important}
+.product-row .price,.summary-mini strong,.stat-card .trend{color:#222!important}
+/* Keep splash/logo imagery intact; this patch changes visual contrast only. */
 </style>
 </head>
 <body>
